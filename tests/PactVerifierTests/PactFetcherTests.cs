@@ -8,7 +8,7 @@ namespace PactVerifierTests
     public class PactFetcherTests
     {
         [Fact]
-        public void Test1()
+        public void GetPactParsesJsonFile()
         {
             const string filename = @"pactUri.json";
             const string json = @"
