@@ -4,7 +4,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <!-- edit this value to change the current major.minor version -->
-    <VersionPrefix>0.2</VersionPrefix>
+    <VersionPrefix>0.1</VersionPrefix>
     <BUILDNUMBER>1</BUILDNUMBER>
    </PropertyGroup>
 
