@@ -12,50 +12,60 @@ namespace Thon.Hotels.PactVerifier
             PactObject = pactObject;
         }
 
-        internal void Validate(string version, string consumerName, string providerName)
+        internal Result<bool> Validate(string version, string consumerName, string providerName)
         {
-            ValidateVersion(version);
-            ValidateConsumer(consumerName);
-            ValidateProvider(providerName);
+            Result<bool> r;
+            r = ValidateVersion(version);
+            if (r is Error<bool>)
+                return r;
+
+            r = ValidateConsumer(consumerName);
+            if (r is Error<bool>)
+                return r;
+            r = ValidateProvider(providerName);
+            return r;
         }
 
-        private void ValidateVersion(string expectedVersion)
+        private Result<bool> ValidateVersion(string expectedVersion)
         {
             var version = (string)(PactObject["metadata"]?["pactSpecification"]?["version"]);
             if (string.IsNullOrEmpty(version))
             {
-                throw new Exception("Pact version not specified in pact file!");
+                return new Error<bool>(Errors.Validation, "Pact version not specified in pact file!");
             }
             if (version != expectedVersion)
             {
-                throw new Exception($"Pact version ({version}) is not supported. Only version {expectedVersion} is supported!");
+                return new Error<bool>(Errors.Validation, $"Pact version ({version}) is not supported. Only version {expectedVersion} is supported!");
             }
+            return new Ok<bool>(true);
         }
 
-        private void ValidateConsumer(string expectedConsumer)
+        private Result<bool> ValidateConsumer(string expectedConsumer)
         {
             var consumer = (string)PactObject["consumer"]?["name"];
             if (string.IsNullOrEmpty(consumer))
             {
-                throw new Exception("No consumer in pact file!");
+                return new Error<bool>(Errors.Validation, "No consumer in pact file!");
             }
             if (consumer != expectedConsumer)
             {
-                throw new Exception($"Consumer '{expectedConsumer}' does not match consumer specified in pact file ('{consumer}')");
+                return new Error<bool>(Errors.Validation, $"Consumer '{expectedConsumer}' does not match consumer specified in pact file ('{consumer}')");
             }
+            return new Ok<bool>(true);
         }
 
-        private void ValidateProvider(string expectedProviderName)
+        private Result<bool> ValidateProvider(string expectedProviderName)
         {
             var provider = (string)PactObject["provider"]?["name"];
             if (string.IsNullOrEmpty(provider))
             {
-                throw new Exception("No provider in pact file!");
+                return new Error<bool>(Errors.Validation, "No provider in pact file!");
             }
             if (provider != expectedProviderName)
             {
-                throw new Exception($"Provider '{expectedProviderName}' does not match provider specified in pact file ('{provider}')");
+                return new Error<bool>(Errors.Validation, $"Provider '{expectedProviderName}' does not match provider specified in pact file ('{provider}')");
             }
+            return new Ok<bool>(true);
         }
     }
 }

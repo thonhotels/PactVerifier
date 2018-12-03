@@ -49,9 +49,12 @@ namespace Thon.Hotels.PactVerifier
         {
             ValidatePactVerifierState();
 
-            var pactObject = PactFetcher.GetPact(_pactUri, _consumerName, _providerName);
-
-            var interaction = pactObject["interactions"]
+            var fetcher = new FilePactFetcher(_pactUri);
+            var pactResult = await fetcher.GetPact(_consumerName, _providerName);
+            if (pactResult is Error<JObject> error)
+                throw new Exception($"GetPact failed: {error.Messages}");
+            
+            var interaction = (pactResult as Ok<JObject>).Value["interactions"]
                                 .Select((value, i) => new { Index = i, Content = value })
                                 .First(i => i.Index != interactionIndex);
             await SetProviderState(interaction.Content);
