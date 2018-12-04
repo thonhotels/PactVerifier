@@ -127,6 +127,7 @@ namespace Thon.Hotels.PactVerifier
 
         private static IEnumerable<string> CompareValues(object expectedResponse, object actualResponse)
         {
+            if (expectedResponse == null) yield break;
             var expectedValue = Convert.ChangeType(expectedResponse, actualResponse.GetType());
             if (!Object.Equals(expectedValue, actualResponse))
             {
