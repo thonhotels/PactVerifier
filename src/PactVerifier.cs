@@ -14,12 +14,16 @@ namespace Thon.Hotels.PactVerifier
         private string _providerName;
         private string _providerUri;
         private string _consumerName;
-        private string _pactUri;
-        private Action<bool, string> _assert;
+        private Action<bool, string> Assert { get; }
+        private PactFetcher Fetcher { get; }
 
-        public PactVerifier(Action<bool, string> assert)
+        public PactVerifier(Action<bool, string> assert, PactFetcher fetcher)
         {
-            _assert = assert;
+            if (fetcher == null) throw new ArgumentNullException(nameof(fetcher));
+            if (fetcher == null) throw new ArgumentNullException(nameof(fetcher));
+
+            Assert = assert;
+            Fetcher = fetcher;
         }
 
         public PactVerifier ProviderState(string providerStateUrl)
@@ -39,45 +43,40 @@ namespace Thon.Hotels.PactVerifier
             return this;
         }
 
-        public PactVerifier PactUri(string uri)
-        {
-            _pactUri = uri;
-            return this;
-        }
-
-        public async Task Verify(int interactionIndex)
+        public async Task Verify(int interactionIndex, Func<HttpClient> clientFactory = null)
         {
             ValidatePactVerifierState();
-
-            var fetcher = new FilePactFetcher(_pactUri);
-            var pactResult = await fetcher.GetPact(_consumerName, _providerName);
-            if (pactResult is Error<JObject> error)
-                throw new Exception($"GetPact failed: {error.Messages}");
             
-            var interaction = (pactResult as Ok<JObject>).Value["interactions"]
-                                .Select((value, i) => new { Index = i, Content = value })
-                                .First(i => i.Index != interactionIndex);
-            await SetProviderState(interaction.Content);
+            var pactResult = await Fetcher.GetPact(_consumerName, _providerName);
+            if (pactResult is Error<JObject> error)
+                throw new Exception($"GetPact failed: {string.Join(Environment.NewLine, error.Messages)}");
+            
+            var interaction = (pactResult as Ok<JObject>).Value["interactions"].ToArray()[interactionIndex];
+            await SetProviderState(interaction);
 
-            var description = (string)interaction.Content["description"];
-            var providerState = (string)interaction.Content["providerState"];
+            var description = (string)interaction["description"];
+            var providerState = (string)interaction["providerState"];
 
-            var httpClient = new HttpClient();
-            httpClient.BaseAddress = new Uri(_providerUri);
-            var request = GetHttpRequestMessage(interaction.Content);
-            var response = await httpClient.SendAsync(request);
+            var client = CreateHttpClient(clientFactory);
+            var request = GetHttpRequestMessage(interaction);
+            var response = await client.SendAsync(request);
 
-            var expectedStatusCode = int.Parse((string)interaction.Content["response"]["status"]);
+            var expectedStatusCode = int.Parse((string)interaction["response"]["status"]);
             if ((int)response.StatusCode != expectedStatusCode)
             {
                 throw new Exception($"Statuscode '{response.StatusCode}' does not match expected statuscode '{expectedStatusCode}'!");
             }
 
             var jsonResponse = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
-            var result = Comparer.Compare(interaction.Content["response"]["body"], jsonResponse);
+            var result = Comparer.Compare(interaction["response"]["body"], jsonResponse);
 
-            _assert(result.Any() == false, string.Join("", result));
+            Assert(result.Any() == false, string.Join("", result));
         }
+
+        private HttpClient CreateHttpClient(Func<HttpClient> clientFactory) =>
+            (clientFactory != null) ? 
+                clientFactory():
+                new HttpClient { BaseAddress = new Uri(_providerUri) };
 
         private async Task SetProviderState(JToken interactionToken)
         {
@@ -121,10 +120,6 @@ namespace Thon.Hotels.PactVerifier
             if (string.IsNullOrEmpty(_consumerName))
             {
                 throw new Exception("ConsumerName not set. Please call HonoursPactWith method.");
-            }
-            if (string.IsNullOrEmpty(_pactUri))
-            {
-                throw new Exception("PactUri not set. Please call PactUri method.");
             }
         }
     }
