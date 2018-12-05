@@ -70,6 +70,14 @@ namespace Thon.Hotels.PactVerifier
             var jsonResponse = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
             var result = Comparer.Compare(interaction["response"]["body"], jsonResponse);
 
+            if (result.Any())
+            {
+                result = new [] { 
+                    $"Interaction description: {description}{Environment.NewLine}",
+                    $"Path: {request.RequestUri.AbsolutePath}{Environment.NewLine}",
+                }.Concat(result);
+            }
+
             Assert(result.Any() == false, string.Join("", result));
         }
 
