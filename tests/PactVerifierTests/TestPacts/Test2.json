@@ -24,7 +24,7 @@
           "body": {
             "theCode": "someCode",
             "someProperty": "someValue",
-            "anEnumProperty": 0
+            "anEnumProperty": "Value1"
           }
         }
       }
