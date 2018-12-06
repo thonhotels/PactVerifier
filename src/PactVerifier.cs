@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -61,11 +62,9 @@ namespace Thon.Hotels.PactVerifier
             var request = GetHttpRequestMessage(interaction);
             var response = await client.SendAsync(request);
 
-            var expectedStatusCode = int.Parse((string)interaction["response"]["status"]);
-            if ((int)response.StatusCode != expectedStatusCode)
-            {
-                throw new Exception($"Statuscode '{response.StatusCode}' does not match expected statuscode '{expectedStatusCode}'!");
-            }
+            var statusCodeResult = CheckStatusCode((string)interaction["response"]["status"], response.StatusCode);
+            if (statusCodeResult is Error<bool> errorStatus)
+                throw new Exception($"Check status code failed: {string.Join(Environment.NewLine, errorStatus.Messages)}");
 
             var jsonResponse = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
             var result = Comparer.Compare(interaction["response"]["body"], jsonResponse);
@@ -81,6 +80,23 @@ namespace Thon.Hotels.PactVerifier
             Assert(result.Any() == false, string.Join("", result));
         }
 
+        private Result<bool> CheckStatusCode(string expectedString, HttpStatusCode actualCode)
+        {
+            if (int.TryParse(expectedString, out var expectedStatusCodeInt))
+            {
+                return ((int)actualCode == expectedStatusCodeInt) ?
+                    (Result<bool>)new Ok<bool>(true) :
+                    new Error<bool>(Errors.Validation, $"Statuscode '{actualCode}' does not match expected statuscode '{expectedStatusCodeInt}'!");
+            }
+            if (Enum.TryParse<HttpStatusCode>(expectedString, out var expectedStatusCode))
+            {
+                return (actualCode == expectedStatusCode) ?
+                    (Result<bool>)new Ok<bool>(true) :
+                    new Error<bool>(Errors.Validation, $"Statuscode '{actualCode}' does not match expected statuscode '{expectedStatusCode}'!");
+            }
+            return new Error<bool>(Errors.Validation, $"String from pact does not validate ({expectedString})");
+        }
+
         private HttpClient CreateHttpClient(Func<HttpClient> clientFactory) =>
             (clientFactory != null) ? 
                 clientFactory():
@@ -91,14 +107,12 @@ namespace Thon.Hotels.PactVerifier
             var providerState = (string)interactionToken["providerState"];
             if (!string.IsNullOrEmpty(providerState))
             {
-                var httpClient = new HttpClient();
-                httpClient.BaseAddress = new Uri($"{_providerUri}");
-                var url = new Uri($"/{_providerStateUrl.Trim('/')}");
-                var request = GetHttpRequestMessage(interactionToken);
+                var request = new HttpRequestMessage(HttpMethod.Get, new Uri(_providerStateUrl.Trim('/'), UriKind.Relative));
                 request.Content = new StringContent(JsonConvert.SerializeObject(new ProviderState { Consumer = _consumerName, State = providerState }), Encoding.UTF8, "application/json");
-                var response = await httpClient.SendAsync(request);
-                var jsonResponse = JsonConvert.DeserializeObject<JObject>(await response.Content.ReadAsStringAsync());
-            }
+
+                var httpClient = new HttpClient{ BaseAddress = new Uri(_providerUri) };
+                await httpClient.SendAsync(request);
+             }
         }
 
         private static HttpRequestMessage GetHttpRequestMessage(JToken interactionToken)
