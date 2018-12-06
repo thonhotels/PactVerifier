@@ -5,11 +5,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using FakeItEasy;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Thon.Hotels.PactVerifier;
 using Xunit;
 
 namespace PactVerifierTests
 {
+    public enum SomeEnum { Value1, Value2 }
     public class FakeHandler : DelegatingHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -22,8 +24,9 @@ namespace PactVerifierTests
                         JsonConvert.SerializeObject(
                             new {
                                 TheCode = "someCode",
-                                SomeProperty = "someValue"
-                            }), Encoding.UTF8, "application/json")
+                                SomeProperty = "someValue",
+                                AnEnumProperty = SomeEnum.Value1,
+                            }, new StringEnumConverter()), Encoding.UTF8, "application/json")
                 }
             );
         }
@@ -35,6 +38,24 @@ namespace PactVerifierTests
         {
             const string ServiceUri = "http://localhost:9222";
             var fetcher = new FilePactFetcher("TestPacts/Test1.json");
+            var pactVerifier = new PactVerifier((condition, message) => Assert.True(condition, message), fetcher);
+            await pactVerifier
+                .ProviderState($"{ServiceUri}/provider-states")
+                .ServiceProvider("theProvider", ServiceUri)
+                .HonoursPactWith("theConsumer")
+                .Verify(0, () => 
+                            new HttpClient(new FakeHandler()) 
+                            { 
+                                BaseAddress = new System.Uri(ServiceUri)
+                            }
+                        );
+        }
+
+        [Fact]
+        public async Task GetPactParsesJsonFileWithEnum()
+        {
+            const string ServiceUri = "http://localhost:9222";
+            var fetcher = new FilePactFetcher("TestPacts/Test2.json");
             var pactVerifier = new PactVerifier((condition, message) => Assert.True(condition, message), fetcher);
             await pactVerifier
                 .ProviderState($"{ServiceUri}/provider-states")
