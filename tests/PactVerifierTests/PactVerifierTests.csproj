@@ -22,5 +22,6 @@
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
     <None Update="TestPacts/Test1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="TestPacts/Test2.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="TestPacts/Test3.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

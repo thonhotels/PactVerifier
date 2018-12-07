@@ -20,5 +20,12 @@ namespace PactVerifierTests
             var result = Comparer.Compare(10, 11);
             Assert.Collection(result, s => s.Equals("10 != 11"));
         }
+
+        [Fact]
+        public void EmptyStringEqualsNull()
+        {
+            var result = Comparer.Compare("", null);
+            Assert.Collection(result, s => s.Equals("Empty != null"));
+        }
     }
 }
