@@ -10,21 +10,28 @@ namespace Thon.Hotels.PactVerifier
     {
         public static IEnumerable<string> Compare(object expectedResponse, object actualResponse)
         {
-
+            if (actualResponse == null)
+            {
+                if (expectedResponse != null) 
+                    yield return $"Actual response is null, expected is {expectedResponse.ToString()}";
+                yield break;
+            }
             if (actualResponse is JObject)
             {
-                return Comparer.CompareObjects(expectedResponse as JObject, actualResponse as JObject);
+                foreach(var r in Comparer.CompareObjects(expectedResponse as JObject, actualResponse as JObject)) yield return r;
             }
             else if (actualResponse is JArray)
             {
-                return Comparer.CompareArrays(expectedResponse as JArray, actualResponse as JArray);
+                foreach(var r in Comparer.CompareArrays(expectedResponse as JArray, actualResponse as JArray)) yield return r;
             }
             else if (actualResponse is System.Object)
             {
-                return Comparer.CompareValues(expectedResponse, actualResponse);
+                foreach(var r in Comparer.CompareValues(expectedResponse, actualResponse)) yield return r;
             }
-            throw new Exception($"Unsupported response type - {actualResponse.GetType()}");
+            else
+                yield return $"Unsupported response type - {actualResponse.GetType()}";
         }
+        
         private static IEnumerable<string> CompareObjects(JObject source, JObject target)
         {
             foreach (KeyValuePair<string, JToken> sourcePair in source)
