@@ -1,0 +1,39 @@
+{
+    "consumer": {
+      "name": "theConsumer"
+    },
+    "provider": {
+      "name": "theProvider"
+    },
+    "interactions": [
+      {
+        "description": "someCode = thisCode",
+        "providerState": "",
+        "request": {
+          "method": "get",
+          "path": "/api/the-provider/some-resource/someCode",
+          "headers": {
+            "Authorization": "Bearer accesstoken"
+          }
+        },
+        "response": {
+          "status": 200,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "theCode": "someCode",
+            "someProperty": null,
+            "anEnumProperty": "Value1",
+            "emptyProperty": ""
+          }
+        }
+      }
+    ],
+    "metadata": {
+      "pactSpecification": {
+        "version": "2.0.0"
+      }
+    }
+  }
+  

@@ -71,6 +71,8 @@ namespace Thon.Hotels.PactVerifier
                 else
                 {
                     JToken expected = sourcePair.Value;
+                    if (expected.Type == JTokenType.Null)
+                        yield break;
                     var actual = SelectToken(target, sourcePair.Key);
                     if (actual.Value.Type == JTokenType.Null && expected.Type == JTokenType.String && (string)expected == "")
                         yield break;

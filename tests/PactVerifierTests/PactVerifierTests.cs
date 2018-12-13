@@ -32,6 +32,7 @@ namespace PactVerifierTests
             );
         }
     }
+
     public class PactVerifierTests
     {
         [Fact]
@@ -75,6 +76,24 @@ namespace PactVerifierTests
         {
             const string ServiceUri = "http://localhost:9222";
             var fetcher = new FilePactFetcher("TestPacts/Test3.json");
+            var pactVerifier = new PactVerifier((condition, message) => Assert.True(condition, message), fetcher);
+            await pactVerifier
+                .ProviderState($"{ServiceUri}/provider-states")
+                .ServiceProvider("theProvider", ServiceUri)
+                .HonoursPactWith("theConsumer")
+                .Verify(0, () => 
+                            new HttpClient(new FakeHandler()) 
+                            { 
+                                BaseAddress = new System.Uri(ServiceUri)
+                            }
+                        );
+        }
+
+        [Fact]
+        public async Task CompareNullWithValue()
+        {
+            const string ServiceUri = "http://localhost:9222";
+            var fetcher = new FilePactFetcher("TestPacts/Test4.json");
             var pactVerifier = new PactVerifier((condition, message) => Assert.True(condition, message), fetcher);
             await pactVerifier
                 .ProviderState($"{ServiceUri}/provider-states")

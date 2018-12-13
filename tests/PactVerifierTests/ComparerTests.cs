@@ -27,5 +27,12 @@ namespace PactVerifierTests
             var result = Comparer.Compare("", null);
             Assert.Collection(result, s => s.Equals("Empty != null"));
         }
+
+        [Fact]
+        public void NullEqualsSomestringl()
+        {
+            var result = Comparer.Compare((string)null, "somevalue");
+            Assert.Collection(result);
+        }
     }
 }
