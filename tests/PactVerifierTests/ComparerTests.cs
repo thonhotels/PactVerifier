@@ -32,7 +32,7 @@ namespace PactVerifierTests
         public void NullEqualsSomestringl()
         {
             var result = Comparer.Compare((string)null, "somevalue");
-            Assert.Collection(result);
+            Assert.Empty(result);
         }
     }
 }
