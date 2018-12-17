@@ -10,6 +10,8 @@ namespace Thon.Hotels.PactVerifier
     {
         public static IEnumerable<string> Compare(object expectedResponse, object actualResponse)
         {
+            if (expectedResponse == null) yield break;
+
             if (actualResponse == null)
             {
                 if (expectedResponse != null) 

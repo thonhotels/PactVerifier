@@ -1,0 +1,31 @@
+{
+  "consumer": {
+    "name": "theConsumer"
+  },
+  "provider": {
+    "name": "theProvider"
+  },
+  "interactions": [
+    {
+      "description": "Something",
+      "request": {
+        "method": "post",
+        "path": "/api/something",
+        "headers": {
+          "Authorization": "Bearer accesstoken"
+        }
+      },
+      "response": {
+        "status": "Created",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  }
+}

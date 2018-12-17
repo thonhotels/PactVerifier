@@ -14,12 +14,19 @@ namespace PactVerifierTests
     public enum SomeEnum { Value1, Value2 }
     public class FakeHandler : DelegatingHandler
     {
+        private HttpStatusCode StatusCode { get; }
+
+        public FakeHandler(HttpStatusCode statusCode = HttpStatusCode.OK)
+        {
+            StatusCode = statusCode;
+        }
+
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             return Task.FromResult(
                 new HttpResponseMessage
                 {
-                    StatusCode = HttpStatusCode.OK,
+                    StatusCode = StatusCode,
                     Content = new StringContent(
                         JsonConvert.SerializeObject(
                             new {
@@ -101,6 +108,24 @@ namespace PactVerifierTests
                 .HonoursPactWith("theConsumer")
                 .Verify(0, () => 
                             new HttpClient(new FakeHandler()) 
+                            { 
+                                BaseAddress = new System.Uri(ServiceUri)
+                            }
+                        );
+        }
+
+        [Fact]
+        public async Task EmptyRequest()
+        {
+            const string ServiceUri = "http://localhost:9222";
+            var fetcher = new FilePactFetcher("TestPacts/Test5.json");
+            var pactVerifier = new PactVerifier((condition, message) => Assert.True(condition, message), fetcher);
+            await pactVerifier
+                .ProviderState($"{ServiceUri}/provider-states")
+                .ServiceProvider("theProvider", ServiceUri)
+                .HonoursPactWith("theConsumer")
+                .Verify(0, () => 
+                            new HttpClient(new FakeHandler(HttpStatusCode.Created)) 
                             { 
                                 BaseAddress = new System.Uri(ServiceUri)
                             }
