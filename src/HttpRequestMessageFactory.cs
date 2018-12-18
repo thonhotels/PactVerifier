@@ -39,7 +39,9 @@ namespace Thon.Hotels.PactVerifier
 
         private static string GetUrl(JToken interaction)
         {
-            return (string)interaction["request"]["path"];
+            return (string)interaction["request"]["path"] + 
+                (string.IsNullOrEmpty((string)interaction["request"]["query"]) ? "" :
+                    "?" + (string)interaction["request"]["query"]);
         }
     }
 }
