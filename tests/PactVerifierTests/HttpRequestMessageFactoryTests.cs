@@ -46,5 +46,16 @@ namespace PactVerifierTests
             Assert.Equal("/api/something?a=abc&d=xyz", m.RequestUri.ToString());
         }
 
+        [Fact]
+        public void PostRequestWithSimplePath()
+        {
+            var m = HttpRequestMessageFactory.Create(JToken.FromObject(new {request = new {
+                method = "post",
+                path = "/api/something"
+            }}));
+            Assert.NotNull(m);
+            Assert.Equal(HttpMethod.Post, m.Method);
+            Assert.Equal("/api/something", m.RequestUri.ToString());
+        }
     }
 }
