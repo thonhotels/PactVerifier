@@ -29,7 +29,7 @@ namespace Thon.Hotels.PactVerifier
 
         private static HttpRequestMessage HttpRequestMessage(HttpMethod httpMethod, JToken interaction)
         {
-            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, GetUrl(interaction));
+            var httpRequestMessage = new HttpRequestMessage(httpMethod, GetUrl(interaction));
             
             httpRequestMessage.Content = interaction["request"]["body"] != null ?
                 new StringContent(interaction["request"]["body"].ToString(), Encoding.UTF8, "application/json") :
