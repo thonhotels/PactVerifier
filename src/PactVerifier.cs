@@ -64,7 +64,7 @@ namespace Thon.Hotels.PactVerifier
 
             var statusCodeResult = CheckStatusCode((string)interaction["response"]["status"], response.StatusCode);
             if (statusCodeResult is Error<bool> errorStatus)
-                throw new Exception($"Check status code failed: {string.Join(Environment.NewLine, errorStatus.Messages)}");
+                throw new Exception($"Check status code for interation {description} failed: {string.Join(Environment.NewLine, errorStatus.Messages)}");
 
             var jsonResponse = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
             var result = Comparer.Compare(interaction["response"]["body"], jsonResponse);
