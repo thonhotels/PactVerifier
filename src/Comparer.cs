@@ -76,14 +76,14 @@ namespace Thon.Hotels.PactVerifier
                     if (expected.Type == JTokenType.Null)
                         yield break;
                     var actual = SelectToken(target, sourcePair.Key);
-                    if (actual.Value.Type == JTokenType.Null && expected.Type == JTokenType.String && (string)expected == "")
-                        yield break;
                     if (actual.Equals(default(KeyValuePair<string, JToken>)))
                     {
                         yield return "Key " + sourcePair.Key + " not found" + Environment.NewLine;
                     }
                     else
                     {
+                        if (actual.Value.Type == JTokenType.Null && expected.Type == JTokenType.String && (string)expected == "")
+                            yield break;                        
                         if (!JToken.DeepEquals(expected, actual.Value))
                         {
                             yield return "Key " + sourcePair.Key + ": "

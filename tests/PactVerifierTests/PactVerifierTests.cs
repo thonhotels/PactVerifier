@@ -131,5 +131,23 @@ namespace PactVerifierTests
                             }
                         );
         }
+
+        [Fact]
+        public async Task ExpectGetToReturnNonExistantPropertyGivesErrorMessage()
+        {
+            const string ServiceUri = "http://localhost:9222";
+            var fetcher = new FilePactFetcher("TestPacts/Test6.json");
+            var pactVerifier = new PactVerifier((condition, message) => Assert.False(condition, message), fetcher);
+            await pactVerifier
+                .ProviderState($"{ServiceUri}/provider-states")
+                .ServiceProvider("theProvider", ServiceUri)
+                .HonoursPactWith("theConsumer")
+                .Verify(0, () => 
+                            new HttpClient(new FakeHandler(HttpStatusCode.OK)) 
+                            { 
+                                BaseAddress = new System.Uri(ServiceUri)
+                            }
+                        );
+        }
     }
 }

@@ -25,5 +25,6 @@
     <None Update="TestPacts/Test3.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="TestPacts/Test4.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="TestPacts/Test5.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="TestPacts/Test6.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
