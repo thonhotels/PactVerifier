@@ -12,6 +12,6 @@ namespace Thon.Hotels.PactVerifier
             PactUri = pactUri;
         }
 
-        protected override Task<Result<string>> ReadPact(string _1, string _2) => Task.FromResult((Result<string>)new Ok<string>(File.ReadAllText(PactUri)));
+        protected override Task<Result<string>> ReadPact(string _1, string _2, string _3) => Task.FromResult((Result<string>)new Ok<string>(File.ReadAllText(PactUri)));
     }
 }

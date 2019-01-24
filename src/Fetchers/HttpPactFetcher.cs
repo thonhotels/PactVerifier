@@ -14,9 +14,9 @@ namespace Thon.Hotels.PactVerifier
             Client = client;
         }
 
-        protected override async Task<Result<string>> ReadPact(string consumerName, string providerName)
+        protected override async Task<Result<string>> ReadPact(string consumerName, string providerName, string tag)
         {
-            var uri = $"pacts/provider/{providerName}/consumer/{consumerName}/latest";
+            var uri = $"pacts/provider/{providerName}/consumer/{consumerName}/latest/{tag}";
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
             var response = await Client.SendAsync(request);
             if (response.StatusCode != HttpStatusCode.OK)
@@ -25,5 +25,5 @@ namespace Thon.Hotels.PactVerifier
         }
     }
 
-    
+
 }

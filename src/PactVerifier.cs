@@ -15,6 +15,7 @@ namespace Thon.Hotels.PactVerifier
         private string _providerName;
         private string _providerUri;
         private string _consumerName;
+        private string _tag;
         private Action<bool, string> Assert { get; }
         private PactFetcher Fetcher { get; }
 
@@ -36,6 +37,7 @@ namespace Thon.Hotels.PactVerifier
         {
             _providerName = providerName;
             _providerUri = providerUri;
+            _tag = "";
             return this;
         }
         public PactVerifier HonoursPactWith(string consumerName)
@@ -44,14 +46,23 @@ namespace Thon.Hotels.PactVerifier
             return this;
         }
 
+        public PactVerifier HonoursPactWith(string consumerName, string tag)
+        {
+            if (tag == null)
+                throw new ArgumentNullException(nameof(tag));
+            _consumerName = consumerName;
+            _tag = tag;
+            return this;
+        }
+
         public async Task Verify(int interactionIndex, Func<HttpClient> clientFactory = null)
         {
             ValidatePactVerifierState();
-            
-            var pactResult = await Fetcher.GetPact(_consumerName, _providerName);
+
+            var pactResult = await Fetcher.GetPact(_consumerName, _providerName, _tag);
             if (pactResult is Error<JObject> error)
                 throw new Exception($"GetPact failed: {string.Join(Environment.NewLine, error.Messages)}");
-            
+
             var interaction = (pactResult as Ok<JObject>).Value["interactions"].ToArray()[interactionIndex];
             await SetProviderState(interaction);
 
@@ -71,7 +82,7 @@ namespace Thon.Hotels.PactVerifier
 
             if (result.Any())
             {
-                result = new [] { 
+                result = new[] {
                     $"Interaction description: {description}{Environment.NewLine}",
                     $"Path: {request.RequestUri.AbsolutePath}{Environment.NewLine}",
                 }.Concat(result);
@@ -98,8 +109,8 @@ namespace Thon.Hotels.PactVerifier
         }
 
         private HttpClient CreateHttpClient(Func<HttpClient> clientFactory) =>
-            (clientFactory != null) ? 
-                clientFactory():
+            (clientFactory != null) ?
+                clientFactory() :
                 new HttpClient { BaseAddress = new Uri(_providerUri) };
 
         private async Task SetProviderState(JToken interactionToken)
@@ -110,9 +121,9 @@ namespace Thon.Hotels.PactVerifier
                 var request = new HttpRequestMessage(HttpMethod.Get, new Uri(_providerStateUrl.Trim('/'), UriKind.Relative));
                 request.Content = new StringContent(JsonConvert.SerializeObject(new ProviderState { Consumer = _consumerName, State = providerState }), Encoding.UTF8, "application/json");
 
-                var httpClient = new HttpClient{ BaseAddress = new Uri(_providerUri) };
+                var httpClient = new HttpClient { BaseAddress = new Uri(_providerUri) };
                 await httpClient.SendAsync(request);
-             }
+            }
         }
 
         private static HttpRequestMessage GetHttpRequestMessage(JToken interactionToken)
