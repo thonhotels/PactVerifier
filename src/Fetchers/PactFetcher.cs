@@ -9,7 +9,7 @@ namespace Thon.Hotels.PactVerifier
     {
         protected abstract Task<Result<string>> ReadPact(string consumerName, string providerName, string tag);
 
-        internal async Task<Result<JObject>> GetPact(string consumerName, string providerName, string tag)
+        public async Task<Result<JObject>> GetPact(string consumerName, string providerName, string tag)
         {
             var result = await ReadPact(consumerName, providerName, tag);
             if (result is Error<string> e)
