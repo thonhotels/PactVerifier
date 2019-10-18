@@ -64,7 +64,7 @@ namespace Thon.Hotels.PactVerifier
                 throw new Exception($"{_consumerName}: GetPact failed: {string.Join(Environment.NewLine, error.Messages)}");
 
             var interaction = (pactResult as Ok<JObject>).Value["interactions"].ToArray()[interactionIndex];
-            await SetProviderState(interaction);
+            await SetProviderState(interaction, clientFactory);
 
             var description = (string)interaction["description"];
             var providerState = (string)interaction["providerState"];
@@ -113,7 +113,7 @@ namespace Thon.Hotels.PactVerifier
                 clientFactory() :
                 new HttpClient { BaseAddress = new Uri(_providerUri) };
 
-        private async Task SetProviderState(JToken interactionToken)
+        private async Task SetProviderState(JToken interactionToken, Func<HttpClient> clientFactory)
         {
             var providerState = (string)interactionToken["providerState"];
             if (!string.IsNullOrEmpty(providerState))
@@ -121,7 +121,7 @@ namespace Thon.Hotels.PactVerifier
                 var request = new HttpRequestMessage(HttpMethod.Get, new Uri(_providerStateUrl.Trim('/'), UriKind.Relative));
                 request.Content = new StringContent(JsonConvert.SerializeObject(new ProviderState { Consumer = _consumerName, State = providerState }), Encoding.UTF8, "application/json");
 
-                var httpClient = new HttpClient { BaseAddress = new Uri(_providerUri) };
+                var httpClient = CreateHttpClient(clientFactory);
                 await httpClient.SendAsync(request);
             }
         }
